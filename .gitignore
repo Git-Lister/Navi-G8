@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Node
+node_modules/
+dist/
+build/
+
+# Tauri
+src-tauri/target/
+
+# Logs
+*.log
+logs/
+
+# Context bundle
+context-bundle.txt
+
+# OS metadata
+.DS_Store
+Thumbs.db

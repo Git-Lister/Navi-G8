@@ -1,0 +1,13 @@
+profiles:
+  fast_local:
+    provider: ollama
+    model: deepseek-r1:7b
+    description: "Fast responses, good for quick questions"
+  smart_api:
+    provider: openrouter
+    model: deepseek/deepseek-r1-0528:free
+    description: "Deep reasoning, may be slower"
+  balanced:
+    provider: ollama
+    model: llama3.2
+    description: "Default local model"
