@@ -11,3 +11,6 @@ docling==0.2.0  # hypothetical version
 sentence-transformers==2.5.1
 loguru==0.7.2
 cryptography==42.0.5
+python-jose[cryptography]  # JWT
+passlib[bcrypt]            # password hashing
+python-multipart            # for form data (login)
