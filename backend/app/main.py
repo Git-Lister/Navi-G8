@@ -17,3 +17,4 @@ def root():
 
 app.include_router(auth.router, prefix="/api/v1")
 
+app.include_router(chat.router, prefix="/api/v1")

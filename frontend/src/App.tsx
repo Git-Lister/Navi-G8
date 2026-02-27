@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LoginForm } from './components/Auth/LoginForm';
 import { RegisterForm } from './components/Auth/RegisterForm';
-import { Console } from './components/Console';
+import { Console } from './components/Console'; // your console component
 import { getToken, logout } from './services/auth';
 import './App.css';
 
