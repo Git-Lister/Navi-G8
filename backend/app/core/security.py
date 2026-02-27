@@ -1,7 +1,9 @@
+# backend/app/core/security.py
+import os
+from datetime import datetime, timedelta, timezone
+
 import bcrypt
 from jose import JWTError, jwt
-from datetime import datetime, timedelta, timezone
-import os
 
 SECRET_KEY = os.getenv("SECRET_KEY", "change-this-in-production")
 ALGORITHM = "HS256"

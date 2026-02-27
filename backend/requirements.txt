@@ -14,4 +14,4 @@ cryptography==42.0.5
 python-jose[cryptography]  # JWT
 bcrypt
 python-multipart
-
+ollama

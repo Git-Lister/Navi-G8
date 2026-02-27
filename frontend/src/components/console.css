@@ -1,0 +1,131 @@
+.console {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #0a0a0a;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #00ff00;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.logout-btn:hover {
+  background: #00ff00;
+  color: #0a0a0a;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.message {
+  display: flex;
+  gap: 10px;
+  line-height: 1.4;
+}
+
+.message.user .role {
+  color: #00ffff;
+}
+
+.message.assistant .role {
+  color: #00ff00;
+}
+
+.role {
+  min-width: 40px;
+}
+
+.content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.input-area {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+textarea {
+  flex: 1;
+  background: #1a1a1a;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  font-family: inherit;
+  padding: 8px;
+  resize: none;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #00ffff;
+}
+
+textarea:disabled {
+  opacity: 0.5;
+}
+
+button {
+  background: transparent;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  height: fit-content;
+}
+
+button:hover:not(:disabled) {
+  background: #00ff00;
+  color: #0a0a0a;
+}
+
+button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stop-btn {
+  border-color: #ff5500;
+  color: #ff5500;
+}
+
+.stop-btn:hover {
+  background: #ff5500;
+  color: #0a0a0a;
+}
+
+.error {
+  color: #ff5555;
+  margin-bottom: 8px;
+  padding: 4px;
+  border: 1px solid #ff5555;
+}

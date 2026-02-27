@@ -1,7 +1,8 @@
 from fastapi import FastAPI
-from .routers import auth
+
 from .database import engine
 from .models import user
+from .routers import auth, chat
 
 app = FastAPI(title="Navi-G8 API")
 
@@ -15,3 +16,4 @@ def root():
     return {"message": "Navi-G8 Backend"}
 
 app.include_router(auth.router, prefix="/api/v1")
+
