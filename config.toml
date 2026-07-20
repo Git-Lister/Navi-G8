@@ -1,0 +1,27 @@
+# Navi-G8 Main Configuration
+
+[workspace]
+watch_folders = ["~/Documents", "~/Projects"]
+exclude_extensions = [".tmp", ".log", ".pyc", ".class"]
+max_file_size_bytes = 1048576
+
+[llm]
+primary_model = "llama3.1"
+primary_base = "http://localhost:11434/v1"
+fallback_model = "llama-3.1-70b-versatile"
+fallback_base = "https://api.groq.com/openai/v1"
+allow_cloud = false
+
+[agent]
+system_prompt = "You are Navi-G8, a helpful assistant."
+max_iterations = 5
+
+[logging]
+level = "INFO"
+json_format = true
+log_dir = "~/.navi-g8/logs"
+retention_days = 30
+
+[meta]
+enabled = true
+schedule = "0 2 * * 0"

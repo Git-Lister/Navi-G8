@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+console/src-tauri/target/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment & Config
+.env
+.env.local
+config.local.toml
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Navi-G8 specific
+logs/
+*.db
+*.sqlite3
