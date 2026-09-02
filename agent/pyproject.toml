@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "navi-agent"
 version = "0.1.0"
-description = "Agent Core for Navi-G8"
+description = "Agent Core for Navi-G8 – a cognitive, self-improving field interface"
 readme = "README.md"
 authors = [{ name = "Your Name", email = "you@example.com" }]
 license = { text = "MIT" }
@@ -14,8 +14,11 @@ dependencies = [
     "mcp[cli]>=1.0.0",
     "openai>=1.0.0",
     "structlog>=24.0.0",
-    "tomli>=2.0.0",
-    "watchdog>=4.0.0",
+    # "tomli" removed – built into Python 3.12+
+    "pydantic>=2.0.0",
+    "chromadb>=0.5.0",
+    "sqlalchemy>=2.0.0",
+    "networkx>=3.0.0",
     "pandas>=2.0.0",
     "cryptography>=42.0.0",
 ]
@@ -28,6 +31,7 @@ dev = [
     "mypy>=1.10.0",
     "pre-commit>=3.7.0",
 ]
+watchdog = ["watchdog>=4.0.0"]  # Moved to optional
 
 [tool.setuptools]
 package-dir = { "" = "src" }
