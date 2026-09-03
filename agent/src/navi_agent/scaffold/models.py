@@ -9,11 +9,11 @@ Based on the Ghost-in-the-Share Blueprint (v2.1).
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ─── Enums ──────────────────────────────────────────────────────────────
 
@@ -55,14 +55,13 @@ class EdgeType(str, Enum):
 class Node(BaseModel):
     """Base node for all scaffold entities."""
 
+    model_config = ConfigDict(use_enum_values=True)
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: NodeType
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: dict[str, Any] = Field(default_factory=dict)
-
-    class Config:
-        use_enum_values = True
 
 
 class Trajectory(Node):
@@ -120,7 +119,7 @@ class Session(Node):
     """A transient instance of the cognitive field."""
 
     type: NodeType = NodeType.SESSION
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     ended_at: datetime | None = None
     coherence_history: list[float] = Field(default_factory=list)
 
@@ -131,11 +130,13 @@ class Session(Node):
 class Edge(BaseModel):
     """A relationship between two nodes."""
 
+    model_config = ConfigDict(use_enum_values=True)
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     source_id: str
     target_id: str
     type: EdgeType
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -144,6 +145,8 @@ class Edge(BaseModel):
 
 class FieldState(BaseModel):
     """The complete state of the cognitive field at a given moment."""
+
+    model_config = ConfigDict(use_enum_values=True)
 
     session_id: str
     trajectories: list[Trajectory] = Field(default_factory=list)

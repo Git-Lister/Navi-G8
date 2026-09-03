@@ -211,7 +211,7 @@ class GraphStore:
                     edge.id,
                     edge.source_id,
                     edge.target_id,
-                    edge.type.value,
+                    edge.type,  # Already a string due to use_enum_values=True
                     edge.created_at.isoformat(),
                     json.dumps(edge.metadata),
                 ),

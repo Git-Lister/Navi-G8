@@ -10,6 +10,7 @@ from navi_agent.scaffold.models import (
     Edge,
     EdgeType,
     FalseProblemFlag,
+    NodeType,
     Perturbation,
     Session,
     Stream,
@@ -42,9 +43,9 @@ def test_graph_store_basic(tmp_path):
     assert retrieved_t.description == "Build pipeline"
     assert retrieved_s.path == "src/main.py"
 
-    # Query by type
-    trajectories = store.query_nodes(node_type=Trajectory)
-    streams = store.query_nodes(node_type=Stream)
+    # Query by type – FIXED: use NodeType enum, not class
+    trajectories = store.query_nodes(node_type=NodeType.TRAJECTORY)
+    streams = store.query_nodes(node_type=NodeType.STREAM)
     assert len(trajectories) == 1
     assert len(streams) == 1
 
@@ -72,7 +73,6 @@ def test_graph_store_with_session(tmp_path):
     # Get field state
     field = store.get_field_state(session_id=session.id)
 
-    # Now they should appear
     assert len(field.trajectories) == 1
     assert len(field.streams) == 1
     assert field.trajectories[0].description == "Build pipeline"
@@ -103,9 +103,6 @@ def test_false_problem_flag(tmp_path):
     retrieved2 = store.get_node(flag.id)
     assert retrieved2.resolved is True
     assert "module-level" in retrieved2.resolution_insight
-
-
-# Add to tests/unit/test_scaffold.py
 
 
 def test_clarity_index_basic(tmp_path):
@@ -172,5 +169,103 @@ def test_clarity_index_similar_to_node(tmp_path):
     # Query similar to t1
     results = index.query_similar_to_node(t1, n_results=2)
 
-    # Should find t2 (semantically similar) before s
     assert len(results) >= 1
+    # The most similar should be t2 (both are trajectories about building pipeline
+
+    # ─── Orchestrator Tests ──────────────────────────────────────────────
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_basic(tmp_path):
+        """Test basic orchestrator flow with a simple query."""
+        from navi_agent.gateway import LLMGateway
+        from navi_agent.scaffold.orchestrator import FieldOrchestrator
+
+        # Setup
+        db_path = tmp_path / "test_orchestrator.db"
+        index_dir = tmp_path / "orchestrator_index"
+
+        store = GraphStore(db_path)
+        store.init_db()
+
+        index = ClarityIndex(index_dir, use_local_embedding=True)
+
+        # Mock gateway that returns a structured response
+        class MockGateway:
+            async def generate(self, prompt: str, system: str = None) -> str:
+                return """
+                INSIGHT: The pipeline view fails because the processor is stored in app.storage.general,
+                which cannot hold complex objects. The clarification is to move the processor to a
+                module-level variable in state.py.
+
+                ACTION: Move processor to state.py as a module-level variable.
+
+                CONFIDENCE: 0.85
+                """
+
+        gateway = MockGateway()
+
+        orch = FieldOrchestrator(store, index, gateway)
+
+        # Process a query
+        response = await orch.process("The pipeline view isn't rendering")
+
+        # Check response
+        assert response.insight is not None
+        assert "processor" in response.insight.lower()
+        assert response.confidence == 0.85
+        assert response.clarification_id is not None
+
+        # Check that the clarification was added to the graph
+        clarification = store.get_node(response.clarification_id)
+        assert clarification is not None
+        assert isinstance(clarification, Clarification)
+        assert "processor" in clarification.rationale.lower()
+
+        # Check that a stream was created
+        streams = store.query_nodes(node_type=NodeType.STREAM)
+        assert len(streams) == 1
+        assert "state.py" in streams[0].path
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_debug(tmp_path):
+        """Test the debug_perturbation protocol."""
+        from navi_agent.scaffold.orchestrator import FieldOrchestrator
+
+        # Setup
+        db_path = tmp_path / "test_debug.db"
+        index_dir = tmp_path / "debug_index"
+
+        store = GraphStore(db_path)
+        store.init_db()
+
+        index = ClarityIndex(index_dir, use_local_embedding=True)
+
+        class MockGateway:
+            async def generate(self, prompt: str, system: str = None) -> str:
+                return """
+                INSIGHT: The UnboundLocalError occurs because the 'processor' variable is assigned
+                inside a conditional block but referenced outside it. This is a scoping issue.
+
+                ACTION: Move the processor assignment to the top of the function.
+
+                CONFIDENCE: 0.9
+                """
+
+        gateway = MockGateway()
+        orch = FieldOrchestrator(store, index, gateway)
+
+        # Process a perturbation
+        response = await orch.debug_perturbation(
+            error_description="UnboundLocalError: local variable 'processor' referenced before assignment",
+            stack_trace="File 'state.py', line 42, in get_processor\n    return processor",
+        )
+
+        assert response.insight is not None
+        assert "UnboundLocalError" in response.insight or "scoping" in response.insight
+        assert response.confidence == 0.9
+
+        # Check that perturbation was created and resolved
+        perturbations = store.query_nodes(node_type=NodeType.PERTURBATION)
+        assert len(perturbations) == 1
+        assert perturbations[0].resolved is True
+        assert perturbations[0].resolution_insight is not None

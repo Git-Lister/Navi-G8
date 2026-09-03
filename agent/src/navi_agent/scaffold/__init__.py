@@ -1,7 +1,8 @@
 """
 Navi-G8 Scaffold – Cognitive layer for the field interface.
 
-Exports the core models, graph store, and clarity index for use by the orchestrator.
+Exports the core models, graph store, clarity index, and orchestrator
+for use by the wider system.
 """
 
 from .clarity_index import ClarityIndex, get_embedding_function
@@ -20,6 +21,12 @@ from .models import (
     Trajectory,
     TrajectoryStatus,
 )
+from .orchestrator import (
+    FieldOrchestrator,
+    OrchestratorResponse,
+    build_system_prompt,
+    parse_orchestrator_response,
+)
 
 __all__ = [
     "Node",
@@ -37,4 +44,8 @@ __all__ = [
     "GraphStore",
     "ClarityIndex",
     "get_embedding_function",
+    "FieldOrchestrator",
+    "OrchestratorResponse",
+    "build_system_prompt",
+    "parse_orchestrator_response",
 ]

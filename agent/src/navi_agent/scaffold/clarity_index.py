@@ -6,16 +6,23 @@ rather than just ID or type. Used by the Orchestrator to find relevant
 context before calling the LLM.
 """
 
-import json
-import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import chromadb
 from chromadb.config import Settings
+from chromadb.errors import NotFoundError
 from chromadb.utils import embedding_functions
 
-from .models import Clarification, FalseProblemFlag, Node, Perturbation, Session, Stream, Trajectory
+from .models import (
+    Clarification,
+    FalseProblemFlag,
+    Node,
+    Perturbation,
+    Session,
+    Stream,
+    Trajectory,
+)
 
 # ─── Embedding Function ────────────────────────────────────────────────
 
@@ -74,10 +81,10 @@ class ClarityIndex:
         # Get embedding function
         self.embed_fn = get_embedding_function(use_local=use_local_embedding)
 
-        # Get or create collection
+        # Get or create collection – FIXED: catch NotFoundError
         try:
             self.collection = self.client.get_collection(collection_name)
-        except ValueError:
+        except NotFoundError:
             self.collection = self.client.create_collection(
                 name=collection_name, embedding_function=self.embed_fn
             )
