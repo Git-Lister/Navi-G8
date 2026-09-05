@@ -38,11 +38,11 @@ class FieldTerminal:
     def _coherence_indicator(self) -> str:
         """Return a visual indicator of field coherence."""
         if self.coherence >= 0.8:
-            return "🟢"  # High coherence – calm, steady
+            return "🟢"
         elif self.coherence >= 0.5:
-            return "🟡"  # Medium coherence – pulse
+            return "🟡"
         else:
-            return "🔴"  # Low coherence – rapid pulse
+            return "🔴"
 
     def _coherence_color(self) -> str:
         """Return a colour based on coherence."""
@@ -62,16 +62,11 @@ class FieldTerminal:
             style: Rich style string.
             as_markdown: Whether to render as Markdown.
         """
-        # Add a subtle field marker
-        indicator = self._coherence_indicator()
-        color = self._coherence_color()
-
         # Format the output
         if as_markdown:
             rendered = Markdown(content)
             console.print(rendered)
         else:
-            # Wrap in a subtle panel for insight/action blocks
             if "INSIGHT" in content or "insight" in content[:20].lower():
                 panel = Panel(
                     content,
@@ -96,9 +91,6 @@ class FieldTerminal:
     def display_field_state(self, summary: dict) -> None:
         """
         Display the current field state.
-
-        Args:
-            summary: A dictionary from orchestrator.get_reentry_summary()
         """
         lines = []
 
@@ -109,7 +101,7 @@ class FieldTerminal:
             volatile = summary.get("volatile_streams", [])
 
             lines.append(f"[bold]🌐 Field State[/bold]")
-            lines.append(f"  Coherence: {field.coherence:.2f}" if field else "")
+            lines.append(f"  Coherence: {self.coherence:.2f}")
             lines.append(f"  Active trajectories: {len(active)}")
             lines.append(f"  Unresolved flags: {len(flags)}")
             lines.append(f"  Volatile streams: {len(volatile)}")
@@ -142,9 +134,6 @@ class FieldTerminal:
         """
         Get input from the user – the field speaks.
 
-        Args:
-            placeholder: Optional placeholder text.
-
         Returns:
             The user's input.
         """
@@ -152,20 +141,17 @@ class FieldTerminal:
         indicator = self._coherence_indicator()
         color = self._coherence_color()
 
-        # Display a subtle prompt – no `$`, just a gentle nudge
         console.print(
             f"[{color}]➜[/{color}] ",
             end="",
             style=color,
         )
 
-        # Use rich's Prompt with a custom style
         if placeholder:
             user_input = Prompt.ask(f"[{color}]➜[/{color}]", default=placeholder)
         else:
             user_input = Prompt.ask(f"[{color}]➜[/{color}]")
 
-        # Record the input in history
         self.history.append(f"> {user_input}")
 
         return user_input.strip()
@@ -174,8 +160,6 @@ class FieldTerminal:
         """Update the field coherence value."""
         self.coherence = max(0.0, min(1.0, coherence))
 
-
-# ─── Test ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import asyncio
