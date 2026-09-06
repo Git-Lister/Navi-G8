@@ -1,0 +1,236 @@
+/* desktop/src/App.css */
+
+:root {
+  --bg-primary: #0d0d0f;
+  --bg-secondary: #1a1a1e;
+  --bg-tertiary: #25252b;
+  --text-primary: #e8e8ed;
+  --text-secondary: #8a8a9a;
+  --text-dim: #5a5a6a;
+  --accent-cyan: #4ad8e0;
+  --accent-amber: #f5b342;
+  --accent-green: #6fcf97;
+  --accent-red: #eb5757;
+  --border-color: #2a2a30;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ─── Header ────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+.header h1 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.header .coherence {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  background: var(--bg-tertiary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+}
+
+/* ─── Main Layout ──────────────────────────────────────────────────── */
+
+.main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ─── Sidebar ───────────────────────────────────────────────────────── */
+
+.sidebar {
+  width: 220px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  padding: 1rem;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.field-state h3 {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.field-state > div {
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.field-state > div:last-child {
+  border-bottom: none;
+}
+
+/* ─── Content ──────────────────────────────────────────────────────── */
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  min-width: 0;
+}
+
+/* ─── Graph View ───────────────────────────────────────────────────── */
+
+.graph-view {
+  flex: 1;
+  min-height: 0;
+  padding: 0.5rem;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* ─── Terminal ─────────────────────────────────────────────────────── */
+
+.terminal {
+  height: 200px;
+  min-height: 120px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.terminal-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+}
+
+.terminal-msg {
+  padding: 0.15rem 0;
+  line-height: 1.5;
+}
+
+.terminal-msg.user {
+  color: var(--text-primary);
+}
+
+.terminal-msg.assistant {
+  color: var(--accent-cyan);
+}
+
+.terminal-input-row {
+  display: flex;
+  border-top: 1px solid var(--border-color);
+  padding: 0.25rem;
+  gap: 0.25rem;
+  background: var(--bg-tertiary);
+}
+
+.terminal-input {
+  flex: 1;
+  background: var(--bg-primary);
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.terminal-input:focus {
+  outline: 1px solid var(--accent-cyan);
+}
+
+.terminal-input::placeholder {
+  color: var(--text-dim);
+}
+
+.terminal-send {
+  background: var(--accent-cyan);
+  color: var(--bg-primary);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.terminal-send:hover {
+  opacity: 0.8;
+}
+
+/* ─── Scrollbar ────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+/* ─── Graph Container ──────────────────────────────────────────────── */
+
+.graph-container {
+  flex: 1;
+  min-height: 0;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+}

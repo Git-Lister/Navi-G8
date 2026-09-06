@@ -43,3 +43,11 @@ Thumbs.db
 logs/
 *.db
 *.sqlite3
+
+
+# Tauri / Rust
+desktop/src-tauri/target/
+desktop/node_modules/
+desktop/dist/
+desktop/.vite/
+desktop/src-tauri/Cargo.lock
