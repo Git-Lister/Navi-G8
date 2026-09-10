@@ -1,14 +1,14 @@
-# Python
+# ─── Python ───────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.egg
+*.egg-info/
 .venv/
 venv/
 ENV/
 env/
-*.so
-*.egg
-*.egg-info/
 dist/
 build/
 *.log
@@ -16,38 +16,32 @@ build/
 .mypy_cache/
 .ruff_cache/
 
-# Rust
+# ─── Rust / Tauri ─────────────────────────────────────────────────────
 /target/
 **/*.rs.bk
 *.pdb
-console/src-tauri/target/
+desktop/src-tauri/target/
+# NOTE: Cargo.lock is committed for applications (not ignored)
 
-# Node
+# ─── Node ─────────────────────────────────────────────────────────────
 node_modules/
 dist/
 dist-ssr/
 *.local
 
-# Environment & Config
+# ─── Environment & Config ─────────────────────────────────────────────
 .env
 .env.local
 config.local.toml
 
-# OS
+# ─── OS ───────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
 
-# Navi-G8 specific
+# ─── Navi-G8 specific ─────────────────────────────────────────────────
 logs/
 *.db
 *.sqlite3
-
-
-# Tauri / Rust
-desktop/src-tauri/target/
-desktop/node_modules/
-desktop/dist/
-desktop/.vite/
-desktop/src-tauri/Cargo.lock
+backend_diagnostic.log
