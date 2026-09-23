@@ -13,6 +13,7 @@ Usage:
 
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from ..gateway import LLMGateway
@@ -28,9 +29,23 @@ from .models import (
     Perturbation,
     Session,
     Stream,
-    Trajectory,
     calculate_coherence,
 )
+
+SESSION_FILE = Path.home() / ".navi-g8" / "session_id.txt"
+
+
+def _save_session_id(session_id: str) -> None:
+    """Persist the session ID to disk so daemon restarts resume it."""
+    SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+    SESSION_FILE.write_text(session_id)
+
+
+def _load_session_id() -> str | None:
+    """Load the last saved session ID, if it exists."""
+    if SESSION_FILE.exists():
+        return SESSION_FILE.read_text().strip()
+    return None
 
 
 @dataclass
@@ -58,51 +73,6 @@ You will respond in a structured format with three sections:
 2. ACTION: A specific, minimal action (if any) to deepen the field's understanding. Use "None" if no action is needed.
 3. CONFIDENCE: A number between 0 and 1 indicating your certainty.
 """
-
-
-def build_system_prompt(
-    field: FieldState,
-    context_nodes: list[dict[str, Any]],
-    active_trajectories: list[Trajectory],
-    unresolved_flags: list[FalseProblemFlag],
-    recent_clarifications: list[Clarification],
-) -> str:
-    """Build the enriched system prompt with field context."""
-    prompt = BASE_SYSTEM_PROMPT
-
-    if active_trajectories:
-        prompt += "\n\n## Active Trajectories\n"
-        for t in active_trajectories:
-            prompt += f"- {t.description} (bearing: {t.bearing})\n"
-
-    if unresolved_flags:
-        prompt += "\n## Unresolved False Problem Flags\n"
-        for f in unresolved_flags:
-            prompt += f"- {f.description} (context: {f.context})\n"
-
-    # ─── Recent clarifications (memory) ─────────────────────────────
-    if recent_clarifications:
-        prompt += "\n## Recent Clarifications (Memory)\n"
-        for c in recent_clarifications[:5]:
-            prompt += f"- {c.description}\n"
-            if c.rationale:
-                prompt += f"  Rationale: {c.rationale[:150]}...\n"
-
-    if context_nodes:
-        prompt += "\n## Relevant Past Context\n"
-        for ctx in context_nodes[:3]:
-            if ctx.get("metadata", {}).get("description"):
-                prompt += f"- {ctx['metadata']['description']}\n"
-
-    prompt += "\n## Field Metrics\n"
-    prompt += f"- Coherence: {field.coherence:.2f}\n"
-    prompt += f"- Active streams: {len(field.streams)}\n"
-    prompt += f"- Active trajectories: {len(active_trajectories)}\n"
-    prompt += f"- Unresolved flags: {len(unresolved_flags)}\n"
-    prompt += f"- Recent clarifications: {len(recent_clarifications)}\n"
-
-    prompt += "\nRespond with the structured format described above."
-    return prompt
 
 
 def parse_orchestrator_response(raw: str) -> tuple[str, str | None, float]:
@@ -144,7 +114,7 @@ class FieldOrchestrator:
         self.graph = graph_store
         self.index = clarity_index
         self.gateway = gateway
-        self.current_session_id: str | None = None
+        self.current_session_id: str | None = _load_session_id()
 
     def get_reentry_summary(self, session_id: str | None = None) -> dict[str, Any]:
         """Protocol A: Generate a field state summary for re-entry."""
@@ -234,35 +204,32 @@ class FieldOrchestrator:
         system_prompt_override: str | None = None,
     ) -> OrchestratorResponse:
         """Protocol B: Process user input with full field awareness."""
+        # Resolve session: explicit param > saved current_session_id
+        if session_id is None:
+            session_id = self.current_session_id
+
         field = self.graph.get_field_state(session_id)
 
-        if not field.session_id:
+        if field.session_id:
+            # Existing session found; make sure local and instance state agree
+            session_id = field.session_id
+            self.current_session_id = session_id
+        else:
+            # No valid session found; create a new one
             session = Session()
             self.graph.add_node(session)
             self.index.add_node(session)
-            self.current_session_id = session.id
+            session_id = session.id
+            self.current_session_id = session_id
+            _save_session_id(session_id)
             field = self.graph.get_field_state(session.id)
-
-        session_id = self.current_session_id or field.session_id
-
-        if not field.session_id:
-            self.graph.add_edge(
-                Edge(
-                    source_id=session_id,
-                    target_id=session.id,
-                    type=EdgeType.BELONGS_TO,
-                )
-            )
-
-        # ─── Graph: recent clarifications (memory) ──────────────────
-        recent_clarifications = self.graph.query_nodes(node_type=NodeType.CLARIFICATION, limit=5)
-        recent_clarifications = [c for c in recent_clarifications if isinstance(c, Clarification)]
 
         # ─── Build system prompt ─────────────────────────────────────
         if system_prompt_override:
             system_prompt = system_prompt_override
         else:
             field_report = self._render_field_report(field, user_input)
+            print(f"[FIELD_REPORT]\n{field_report}\n[/FIELD_REPORT]", flush=True)
             system_prompt = BASE_SYSTEM_PROMPT + "\n\n" + field_report
 
         # ─── Call LLM ────────────────────────────────────────────────
@@ -331,6 +298,7 @@ class FieldOrchestrator:
             session_node.coherence_history.append(field.coherence)
             if len(session_node.coherence_history) > 100:
                 session_node.coherence_history = session_node.coherence_history[-100:]
+            session_node.metadata["coherence"] = field.coherence
             self.graph.add_node(session_node)
 
         return OrchestratorResponse(

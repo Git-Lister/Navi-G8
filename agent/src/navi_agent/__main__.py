@@ -118,7 +118,7 @@ def daemon_mode():
                                         + ("..." if len(t.description) > 20 else ""),
                                         "type": "trajectory",
                                         "description": t.description,
-                                        "status": t.status.value,
+                                        "status": t.status,
                                     }
                                 )
 
@@ -183,7 +183,7 @@ def daemon_mode():
                                         "id": e.id,
                                         "from": e.source_id,
                                         "to": e.target_id,
-                                        "label": e.type.value,
+                                        "label": e.type,
                                     }
                                 )
 

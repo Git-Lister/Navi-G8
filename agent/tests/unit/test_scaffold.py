@@ -10,6 +10,7 @@ from navi_agent.scaffold.models import (
     Edge,
     EdgeType,
     FalseProblemFlag,
+    FieldState,
     NodeType,
     Perturbation,
     Session,
@@ -267,3 +268,57 @@ def test_clarity_index_similar_to_node(tmp_path):
         assert len(perturbations) == 1
         assert perturbations[0].resolved is True
         assert perturbations[0].resolution_insight is not None
+
+
+def test_render_field_report_produces_structured_output(tmp_path):
+    """Verify _render_field_report renders trajectories, streams, and edges."""
+    from navi_agent.scaffold.graph_store import GraphStore
+    from navi_agent.scaffold.models import (
+        Clarification,
+        Edge,
+        EdgeType,
+        Perturbation,
+        Stream,
+        Trajectory,
+    )
+    from navi_agent.scaffold.orchestrator import FieldOrchestrator
+
+    class MockIndex:
+        def query(self, *args, **kwargs):
+            return []
+
+    class MockGateway:
+        async def generate(self, prompt: str, system: str | None = None) -> str:
+            return "INSIGHT: test\nACTION: None\nCONFIDENCE: 0.5"
+
+    graph = GraphStore(tmp_path / "test.db")
+    graph.init_db()
+
+    t = Trajectory(description="Build audio pipeline", bearing="design")
+    s = Stream(path="audio/processor.py", volatility=0.7)
+    p = Perturbation(description="View not rendering", resolved=False)
+    c = Clarification(
+        description="Move processor to module level",
+        rationale="State persistence",
+    )
+
+    field = FieldState(
+        session_id="test-session",
+        trajectories=[t],
+        streams=[s],
+        perturbations=[p],
+        clarifications=[c],
+        edges=[
+            Edge(source_id=c.id, target_id=t.id, type=EdgeType.ADDRESSES),
+            Edge(source_id=s.id, target_id=p.id, type=EdgeType.EMERGES_FROM),
+        ],
+    )
+
+    orch = FieldOrchestrator(graph, MockIndex(), MockGateway())
+    report = orch._render_field_report(field, "test query")
+
+    assert "## Field Report" in report
+    assert "Build audio pipeline" in report
+    assert "audio/processor.py" in report
+    assert "ACTIVE Perturbation: View not rendering" in report
+    assert "Clarified by: Move processor to module level" in report

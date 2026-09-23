@@ -24,7 +24,6 @@ from .models import (
 from .orchestrator import (
     FieldOrchestrator,
     OrchestratorResponse,
-    build_system_prompt,
     parse_orchestrator_response,
 )
 
@@ -45,7 +44,6 @@ __all__ = [
     "Stream",
     "Trajectory",
     "TrajectoryStatus",
-    "build_system_prompt",
     "get_embedding_function",
     "parse_orchestrator_response",
 ]

@@ -135,6 +135,15 @@ function App() {
   }, []);
 
   const sendMessage = async (text: string) => {
+    const command = text.trim().toLowerCase();
+    if (command === 'exit' || command === 'quit' || command === 'goodbye') {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: text.trim() },
+        { role: 'assistant', content: '🌙 The field is quieting. Goodbye.' },
+      ]);
+      return;
+    }
     if (!text.trim()) return;
     setMessages((prev) => [...prev, { role: 'user', content: text.trim() }]);
     try {
