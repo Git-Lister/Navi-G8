@@ -169,3 +169,28 @@ class FieldState(BaseModel):
     def get_unresolved_flags(self) -> list[FalseProblemFlag]:
         """Return all unresolved false problem flags."""
         return [f for f in self.false_problem_flags if not f.resolved]
+
+
+def calculate_coherence(field: FieldState) -> float:
+    """
+    Coherence measures the health of the field:
+    - Active trajectory coverage (are we moving?)
+    - Perturbation resolution rate (are we fixing?)
+    - Flag resolution rate (are we clarifying?)
+    """
+    if not field.trajectories:
+        return 0.0
+
+    active_count = len(field.get_active_trajectories())
+    total_trajectories = len(field.trajectories)
+    active_ratio = active_count / total_trajectories if total_trajectories else 0.0
+
+    resolved_perturbations = sum(1 for p in field.perturbations if p.resolved)
+    total_perturbations = len(field.perturbations)
+    resolved_ratio = resolved_perturbations / total_perturbations if total_perturbations else 1.0
+
+    unresolved_flags = len(field.get_unresolved_flags())
+    total_flags = len(field.false_problem_flags)
+    flag_ratio = 1.0 - (unresolved_flags / total_flags) if total_flags else 1.0
+
+    return (active_ratio * 0.4) + (resolved_ratio * 0.4) + (flag_ratio * 0.2)

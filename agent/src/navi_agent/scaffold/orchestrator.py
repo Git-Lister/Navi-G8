@@ -29,6 +29,7 @@ from .models import (
     Session,
     Stream,
     Trajectory,
+    calculate_coherence,
 )
 
 
@@ -169,6 +170,63 @@ class FieldOrchestrator:
             "volatile_streams": volatile,
         }
 
+    def _render_field_report(
+        self,
+        field: FieldState,
+        user_query: str,
+        hops: int = 2,
+    ) -> str:
+        """Traverse the field graph and render a causal narrative for the LLM."""
+        lines = ["## Field Report"]
+
+        # Active Trajectories and their Clarifications
+        for t in field.get_active_trajectories():
+            lines.append(f"\n### Trajectory: {t.description}")
+            lines.append(f"Bearing: {t.bearing} | Status: {t.status.value}")
+            addressing = [
+                e for e in field.edges if e.target_id == t.id and e.type == EdgeType.ADDRESSES
+            ]
+            for edge in addressing:
+                clar = next(
+                    (c for c in field.clarifications if c.id == edge.source_id),
+                    None,
+                )
+                if clar:
+                    lines.append(f"  -> Clarified by: {clar.description[:80]}")
+
+        # Volatile Streams and their Perturbations
+        for s in field.get_volatile_streams(threshold=0.3):
+            lines.append(f"\n### Stream: {s.path} (volatility: {s.volatility:.2f})")
+            emerging = [
+                e for e in field.edges if e.source_id == s.id and e.type == EdgeType.EMERGES_FROM
+            ]
+            for edge in emerging:
+                pert = next(
+                    (p for p in field.perturbations if p.id == edge.target_id),
+                    None,
+                )
+                if pert:
+                    status = "RESOLVED" if pert.resolved else "ACTIVE"
+                    lines.append(f"  -> {status} Perturbation: {pert.description[:80]}")
+
+        # Unresolved Uncertainties
+        flags = field.get_unresolved_flags()
+        if flags:
+            lines.append("\n### Unresolved Uncertainties")
+            for f in flags:
+                lines.append(f"  ? {f.description} (context: {f.context[:60]})")
+
+        # Semantic Matches (supplemental)
+        similar = self.index.query(user_query, n_results=3)
+        if similar:
+            lines.append("\n### Resonant Memory (semantic)")
+            for r in similar:
+                desc = r.get("metadata", {}).get("description", "")
+                if desc:
+                    lines.append(f"  ~ {desc[:80]}")
+
+        return "\n".join(lines)
+
     async def process(
         self,
         user_input: str,
@@ -187,8 +245,14 @@ class FieldOrchestrator:
 
         session_id = self.current_session_id or field.session_id
 
-        # ─── Clarity Index: semantic context ─────────────────────────
-        context_nodes = self.index.query(user_input, n_results=5)
+        if not field.session_id:
+            self.graph.add_edge(
+                Edge(
+                    source_id=session_id,
+                    target_id=session.id,
+                    type=EdgeType.BELONGS_TO,
+                )
+            )
 
         # ─── Graph: recent clarifications (memory) ──────────────────
         recent_clarifications = self.graph.query_nodes(node_type=NodeType.CLARIFICATION, limit=5)
@@ -198,13 +262,8 @@ class FieldOrchestrator:
         if system_prompt_override:
             system_prompt = system_prompt_override
         else:
-            system_prompt = build_system_prompt(
-                field=field,
-                context_nodes=context_nodes,
-                active_trajectories=field.get_active_trajectories(),
-                unresolved_flags=field.get_unresolved_flags(),
-                recent_clarifications=recent_clarifications,
-            )
+            field_report = self._render_field_report(field, user_input)
+            system_prompt = BASE_SYSTEM_PROMPT + "\n\n" + field_report
 
         # ─── Call LLM ────────────────────────────────────────────────
         raw_response = await self.gateway.generate(user_input, system=system_prompt)
@@ -220,6 +279,13 @@ class FieldOrchestrator:
         )
         self.graph.add_node(clarification)
         self.index.add_node(clarification)
+        self.graph.add_edge(
+            Edge(
+                source_id=session_id,
+                target_id=clarification.id,
+                type=EdgeType.BELONGS_TO,
+            )
+        )
 
         for t in field.get_active_trajectories():
             self.graph.add_edge(
@@ -249,10 +315,17 @@ class FieldOrchestrator:
                     stream = Stream(path=path, volatility=0.3)
                     self.graph.add_node(stream)
                     self.index.add_node(stream)
+                    self.graph.add_edge(
+                        Edge(
+                            source_id=session_id,
+                            target_id=stream.id,
+                            type=EdgeType.BELONGS_TO,
+                        )
+                    )
                     updated_nodes.append(stream.id)
 
         # ─── Update coherence ────────────────────────────────────────
-        field.coherence = (field.coherence + confidence) / 2
+        field.coherence = calculate_coherence(field)
         session_node = self.graph.get_node(session_id)
         if session_node and isinstance(session_node, Session):
             session_node.coherence_history.append(field.coherence)
@@ -285,7 +358,17 @@ class FieldOrchestrator:
         self.graph.add_node(perturbation)
         self.index.add_node(perturbation)
 
+        current_session_id = session_id or self.current_session_id
         field = self.graph.get_field_state(session_id)
+
+        if current_session_id:
+            self.graph.add_edge(
+                Edge(
+                    source_id=current_session_id,
+                    target_id=perturbation.id,
+                    type=EdgeType.BELONGS_TO,
+                )
+            )
 
         recent_clarifications = self.graph.query_nodes(node_type=NodeType.CLARIFICATION, limit=3)
         recent_clarifications = [c for c in recent_clarifications if isinstance(c, Clarification)]
@@ -330,6 +413,14 @@ CONFIDENCE: A number between 0 and 1.
         )
         self.graph.add_node(clarification)
         self.index.add_node(clarification)
+        if current_session_id:
+            self.graph.add_edge(
+                Edge(
+                    source_id=current_session_id,
+                    target_id=clarification.id,
+                    type=EdgeType.BELONGS_TO,
+                )
+            )
 
         self.graph.add_edge(
             Edge(
@@ -347,6 +438,14 @@ CONFIDENCE: A number between 0 and 1.
             )
             self.graph.add_node(flag)
             self.index.add_node(flag)
+            if current_session_id:
+                self.graph.add_edge(
+                    Edge(
+                        source_id=current_session_id,
+                        target_id=flag.id,
+                        type=EdgeType.BELONGS_TO,
+                    )
+                )
 
         return OrchestratorResponse(
             insight=insight,

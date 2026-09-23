@@ -4,7 +4,7 @@
 
 use std::io::{Write, BufRead, BufReader};
 use std::net::TcpStream;
-use std::process::{Command, Stdio, Child};
+use std::process::{Command, Stdio};
 use std::sync::Mutex;
 use std::time::Duration;
 use serde_json::json;
@@ -30,7 +30,16 @@ impl Default for AppState {
 
 #[tauri::command]
 fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
-    let base_path = std::path::PathBuf::from("C:/Users/DaveH/Navi-G8/agent");
+    let exe_path = std::env::current_exe()
+        .map_err(|e| e.to_string())?;
+    let base_path = exe_path
+        .parent()                          // target/debug
+        .and_then(|p| p.parent())          // target
+        .and_then(|p| p.parent())          // src-tauri
+        .and_then(|p| p.parent())          // desktop
+        .and_then(|p| p.parent())          // repo root
+        .ok_or("Failed to resolve repo root")?
+        .join("agent");
     let python_path = base_path.join(".venv").join("Scripts").join("python.exe");
 
     if !python_path.exists() {
