@@ -15,7 +15,6 @@ from navi_agent.scaffold.models import (
     Session,
     Stream,
     Trajectory,
-    TrajectoryStatus,
 )
 
 
@@ -177,7 +176,6 @@ def test_clarity_index_similar_to_node(tmp_path):
     @pytest.mark.asyncio
     async def test_orchestrator_basic(tmp_path):
         """Test basic orchestrator flow with a simple query."""
-        from navi_agent.gateway import LLMGateway
         from navi_agent.scaffold.orchestrator import FieldOrchestrator
 
         # Setup
@@ -191,7 +189,7 @@ def test_clarity_index_similar_to_node(tmp_path):
 
         # Mock gateway that returns a structured response
         class MockGateway:
-            async def generate(self, prompt: str, system: str = None) -> str:
+            async def generate(self, prompt: str, system: str | None = None) -> str:
                 return """
                 INSIGHT: The pipeline view fails because the processor is stored in app.storage.general,
                 which cannot hold complex objects. The clarification is to move the processor to a
@@ -241,7 +239,7 @@ def test_clarity_index_similar_to_node(tmp_path):
         index = ClarityIndex(index_dir, use_local_embedding=True)
 
         class MockGateway:
-            async def generate(self, prompt: str, system: str = None) -> str:
+            async def generate(self, prompt: str, system: str | None = None) -> str:
                 return """
                 INSIGHT: The UnboundLocalError occurs because the 'processor' variable is assigned
                 inside a conditional block but referenced outside it. This is a scoping issue.

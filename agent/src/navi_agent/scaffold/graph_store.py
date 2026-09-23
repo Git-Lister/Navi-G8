@@ -7,9 +7,8 @@ All operations are synchronous (SQLite is local) but wrapped for async use.
 
 import json
 import sqlite3
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
 
 from .models import (
     Clarification,
@@ -95,7 +94,7 @@ class GraphStore:
         store.add_edge(Edge(source_id=node.id, target_id=other.id, type=EdgeType.PRECEDES))
     """
 
-    def __init__(self, db_path: Union[str, Path]):
+    def __init__(self, db_path: str | Path):
         self.db_path = Path(db_path).expanduser().resolve()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -154,7 +153,7 @@ class GraphStore:
             query = f"INSERT OR REPLACE INTO nodes ({columns}) VALUES ({placeholders})"
             conn.execute(query, list(row.values()))
 
-    def get_node(self, node_id: str) -> Optional[Node]:
+    def get_node(self, node_id: str) -> Node | None:
         """Retrieve a node by ID, returning the appropriate model type."""
         with self._connect() as conn:
             row = conn.execute("SELECT * FROM nodes WHERE id = ?", (node_id,)).fetchone()
@@ -162,7 +161,7 @@ class GraphStore:
                 return None
             return self._row_to_node(row)
 
-    def get_nodes(self, node_ids: List[str]) -> List[Node]:
+    def get_nodes(self, node_ids: list[str]) -> list[Node]:
         """Retrieve multiple nodes by ID."""
         if not node_ids:
             return []
@@ -175,11 +174,11 @@ class GraphStore:
 
     def query_nodes(
         self,
-        node_type: Optional[NodeType] = None,
-        status: Optional[TrajectoryStatus] = None,
-        resolved: Optional[bool] = None,
+        node_type: NodeType | None = None,
+        status: TrajectoryStatus | None = None,
+        resolved: bool | None = None,
         limit: int = 100,
-    ) -> List[Node]:
+    ) -> list[Node]:
         """Query nodes with filters."""
         with self._connect() as conn:
             conditions = []
@@ -217,9 +216,7 @@ class GraphStore:
                 ),
             )
 
-    def get_edges(
-        self, source_id: Optional[str] = None, target_id: Optional[str] = None
-    ) -> List[Edge]:
+    def get_edges(self, source_id: str | None = None, target_id: str | None = None) -> list[Edge]:
         """Retrieve edges with optional source/target filters."""
         with self._connect() as conn:
             conditions = []
@@ -245,7 +242,7 @@ class GraphStore:
                 for row in rows
             ]
 
-    def get_adjacent_nodes(self, node_id: str, direction: str = "both") -> List[Node]:
+    def get_adjacent_nodes(self, node_id: str, direction: str = "both") -> list[Node]:
         """Get all nodes connected to the given node."""
         with self._connect() as conn:
             if direction == "outgoing":
@@ -271,7 +268,7 @@ class GraphStore:
 
     # ─── Field State ──────────────────────────────────────────────────
 
-    def get_field_state(self, session_id: Optional[str] = None) -> FieldState:
+    def get_field_state(self, session_id: str | None = None) -> FieldState:
         """
         Retrieve the complete field state for a session.
         If no session_id is provided, gets the most recent session.
@@ -415,7 +412,7 @@ class GraphStore:
                 **base_kwargs,
                 started_at=datetime.fromisoformat(row["started_at"])
                 if row["started_at"]
-                else datetime.utcnow(),
+                else datetime.now(UTC),
                 ended_at=datetime.fromisoformat(row["ended_at"]) if row["ended_at"] else None,
                 coherence_history=json.loads(row["coherence_history"])
                 if row["coherence_history"]
@@ -429,4 +426,3 @@ class GraphStore:
 
     def close(self) -> None:
         """Close any open connections (no-op for sqlite3)."""
-        pass

@@ -5,17 +5,10 @@ Input and output interleaved in a single stream. No `$` prompt – just the fiel
 Displays a subtle pulse indicating field coherence.
 """
 
-import sys
-from typing import Awaitable, Callable, List, Optional
-
-from rich.align import Align
-from rich.columns import Columns
 from rich.console import Console
-from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.text import Text
 
 console = Console()
 
@@ -31,7 +24,7 @@ class FieldTerminal:
     """
 
     def __init__(self, coherence: float = 0.5):
-        self.history: List[str] = []
+        self.history: list[str] = []
         self.coherence = coherence
         self._prompt_visible = False
 
@@ -95,12 +88,11 @@ class FieldTerminal:
         lines = []
 
         if summary.get("has_state", False):
-            field = summary.get("field")
             active = summary.get("active_trajectories", [])
             flags = summary.get("unresolved_flags", [])
             volatile = summary.get("volatile_streams", [])
 
-            lines.append(f"[bold]🌐 Field State[/bold]")
+            lines.append("[bold]🌐 Field State[/bold]")
             lines.append(f"  Coherence: {self.coherence:.2f}")
             lines.append(f"  Active trajectories: {len(active)}")
             lines.append(f"  Unresolved flags: {len(flags)}")
@@ -130,7 +122,7 @@ class FieldTerminal:
             style="dim italic",
         )
 
-    async def prompt(self, placeholder: Optional[str] = None) -> str:
+    async def prompt(self, placeholder: str | None = None) -> str:
         """
         Get input from the user – the field speaks.
 
@@ -138,7 +130,6 @@ class FieldTerminal:
             The user's input.
         """
         # Show the field is listening
-        indicator = self._coherence_indicator()
         color = self._coherence_color()
 
         console.print(

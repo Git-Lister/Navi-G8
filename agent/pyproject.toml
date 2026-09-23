@@ -46,6 +46,16 @@ include = ["navi_agent*"]
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "RUF", "BLE", "DTZ"]
+ignore = [
+    "BLE001",   # Blind exception catching is intentional at I/O boundaries
+    "RUF001",   # Ambiguous unicode (en-dash) in strings - stylistic
+    "RUF002",   # Ambiguous unicode (en-dash) in docstrings - stylistic
+    "RUF003",   # Ambiguous unicode (en-dash) in comments - stylistic
+    "E501",     # Line length - formatter handles most; complex f-strings remain
+]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true

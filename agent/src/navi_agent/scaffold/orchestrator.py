@@ -11,11 +11,9 @@ Usage:
     response = await orchestrator.process(user_input, session_id)
 """
 
-import json
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from ..gateway import LLMGateway
 from .clarity_index import ClarityIndex
@@ -31,7 +29,6 @@ from .models import (
     Session,
     Stream,
     Trajectory,
-    TrajectoryStatus,
 )
 
 
@@ -40,10 +37,10 @@ class OrchestratorResponse:
     """Structured response from the Orchestrator."""
 
     insight: str
-    action: Optional[str] = None
+    action: str | None = None
     confidence: float = 0.5
-    clarification_id: Optional[str] = None
-    updated_nodes: List[str] = field(default_factory=list)
+    clarification_id: str | None = None
+    updated_nodes: list[str] = field(default_factory=list)
     raw_response: str = ""
 
 
@@ -64,10 +61,10 @@ You will respond in a structured format with three sections:
 
 def build_system_prompt(
     field: FieldState,
-    context_nodes: List[Dict[str, Any]],
-    active_trajectories: List[Trajectory],
-    unresolved_flags: List[FalseProblemFlag],
-    recent_clarifications: List[Clarification],
+    context_nodes: list[dict[str, Any]],
+    active_trajectories: list[Trajectory],
+    unresolved_flags: list[FalseProblemFlag],
+    recent_clarifications: list[Clarification],
 ) -> str:
     """Build the enriched system prompt with field context."""
     prompt = BASE_SYSTEM_PROMPT
@@ -96,7 +93,7 @@ def build_system_prompt(
             if ctx.get("metadata", {}).get("description"):
                 prompt += f"- {ctx['metadata']['description']}\n"
 
-    prompt += f"\n## Field Metrics\n"
+    prompt += "\n## Field Metrics\n"
     prompt += f"- Coherence: {field.coherence:.2f}\n"
     prompt += f"- Active streams: {len(field.streams)}\n"
     prompt += f"- Active trajectories: {len(active_trajectories)}\n"
@@ -107,7 +104,7 @@ def build_system_prompt(
     return prompt
 
 
-def parse_orchestrator_response(raw: str) -> Tuple[str, Optional[str], float]:
+def parse_orchestrator_response(raw: str) -> tuple[str, str | None, float]:
     """Parse the LLM response into insight, action, and confidence."""
     insight = raw.strip()
     action = None
@@ -146,9 +143,9 @@ class FieldOrchestrator:
         self.graph = graph_store
         self.index = clarity_index
         self.gateway = gateway
-        self.current_session_id: Optional[str] = None
+        self.current_session_id: str | None = None
 
-    def get_reentry_summary(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_reentry_summary(self, session_id: str | None = None) -> dict[str, Any]:
         """Protocol A: Generate a field state summary for re-entry."""
         field = self.graph.get_field_state(session_id)
 
@@ -175,8 +172,8 @@ class FieldOrchestrator:
     async def process(
         self,
         user_input: str,
-        session_id: Optional[str] = None,
-        system_prompt_override: Optional[str] = None,
+        session_id: str | None = None,
+        system_prompt_override: str | None = None,
     ) -> OrchestratorResponse:
         """Protocol B: Process user input with full field awareness."""
         field = self.graph.get_field_state(session_id)
@@ -275,8 +272,8 @@ class FieldOrchestrator:
     async def debug_perturbation(
         self,
         error_description: str,
-        stack_trace: Optional[str] = None,
-        session_id: Optional[str] = None,
+        stack_trace: str | None = None,
+        session_id: str | None = None,
     ) -> OrchestratorResponse:
         """Protocol C: Process an error/perturbation with root-cause clarity."""
         perturbation = Perturbation(

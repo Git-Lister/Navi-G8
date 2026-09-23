@@ -6,9 +6,7 @@ cohesive interactive experience.
 """
 
 import asyncio
-import sys
 from pathlib import Path
-from typing import Optional
 
 from rich.console import Console
 
@@ -30,7 +28,7 @@ def _save_session_id(session_id: str) -> None:
     SESSION_FILE.write_text(session_id)
 
 
-def _load_session_id() -> Optional[str]:
+def _load_session_id() -> str | None:
     if SESSION_FILE.exists():
         return SESSION_FILE.read_text().strip()
     return None
@@ -47,8 +45,8 @@ class FieldApp:
 
     def __init__(
         self,
-        graph_path: Optional[Path] = None,
-        index_path: Optional[Path] = None,
+        graph_path: Path | None = None,
+        index_path: Path | None = None,
         use_local_embedding: bool = True,
     ):
         if graph_path is None:
@@ -60,14 +58,14 @@ class FieldApp:
         self.index_path = index_path
         self.use_local_embedding = use_local_embedding
 
-        self.graph_store: Optional[GraphStore] = None
-        self.clarity_index: Optional[ClarityIndex] = None
-        self.gateway: Optional[LLMGateway] = None
-        self.orchestrator: Optional[FieldOrchestrator] = None
-        self.terminal: Optional[FieldTerminal] = None
-        self.boot: Optional[BootSequence] = None
+        self.graph_store: GraphStore | None = None
+        self.clarity_index: ClarityIndex | None = None
+        self.gateway: LLMGateway | None = None
+        self.orchestrator: FieldOrchestrator | None = None
+        self.terminal: FieldTerminal | None = None
+        self.boot: BootSequence | None = None
 
-        self.session_id: Optional[str] = None
+        self.session_id: str | None = None
         self.running = False
 
     def _init_components(self) -> None:
@@ -196,8 +194,8 @@ class FieldApp:
 
 
 async def run_field_app(
-    graph_path: Optional[Path] = None,
-    index_path: Optional[Path] = None,
+    graph_path: Path | None = None,
+    index_path: Path | None = None,
     use_local_embedding: bool = True,
 ) -> None:
     app = FieldApp(

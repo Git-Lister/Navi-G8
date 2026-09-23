@@ -1,5 +1,7 @@
 from pathlib import Path
+
 from mcp.types import TextContent
+
 
 async def read_file(path: str) -> list[TextContent]:
     try:
@@ -10,6 +12,7 @@ async def read_file(path: str) -> list[TextContent]:
     except Exception as e:
         return [TextContent(type="text", text=f"Error: {e}")]
 
+
 async def write_file(path: str, content: str) -> list[TextContent]:
     try:
         p = Path(path).expanduser().resolve()
@@ -18,6 +21,7 @@ async def write_file(path: str, content: str) -> list[TextContent]:
         return [TextContent(type="text", text=f"Written to {path}")]
     except Exception as e:
         return [TextContent(type="text", text=f"Error: {e}")]
+
 
 async def list_directory(path: str = ".") -> list[TextContent]:
     try:

@@ -22,6 +22,7 @@ structlog.configure(
 )
 logger = structlog.get_logger()
 
+
 class NaviAgent:
     def __init__(self):
         self.mcp = FastMCP("Navi-G8 Agent")
@@ -38,6 +39,7 @@ class NaviAgent:
     async def run(self):
         logger.info("agent_starting", protocol="MCP")
         await self.mcp.run_stdio_async()
+
 
 async def run_agent():
     agent = NaviAgent()

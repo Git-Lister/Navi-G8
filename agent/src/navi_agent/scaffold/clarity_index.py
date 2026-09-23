@@ -7,7 +7,7 @@ context before calling the LLM.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import chromadb
 from chromadb.config import Settings
@@ -66,7 +66,7 @@ class ClarityIndex:
 
     def __init__(
         self,
-        persist_dir: Union[str, Path],
+        persist_dir: str | Path,
         use_local_embedding: bool = True,
         collection_name: str = "navi_nodes",
     ):
@@ -110,7 +110,7 @@ class ClarityIndex:
         else:
             return f"Node {node.id} of type {node.type.value}."
 
-    def _node_to_metadata(self, node: Node) -> Dict[str, Any]:
+    def _node_to_metadata(self, node: Node) -> dict[str, Any]:
         """Extract metadata from a node for ChromaDB storage."""
         meta = {
             "id": node.id,
@@ -156,7 +156,7 @@ class ClarityIndex:
             # Add
             self.collection.add(ids=[node.id], documents=[text], metadatas=[metadata])
 
-    def add_nodes(self, nodes: List[Node]) -> None:
+    def add_nodes(self, nodes: list[Node]) -> None:
         """Add multiple nodes to the clarity index."""
         for node in nodes:
             self.add_node(node)
@@ -165,7 +165,7 @@ class ClarityIndex:
         """Remove a node from the clarity index."""
         self.collection.delete(ids=[node_id])
 
-    def get_node(self, node_id: str) -> Optional[Dict[str, Any]]:
+    def get_node(self, node_id: str) -> dict[str, Any] | None:
         """Retrieve a node's embedding data by ID."""
         result = self.collection.get(ids=[node_id])
         if result["ids"]:
@@ -183,9 +183,9 @@ class ClarityIndex:
         self,
         query_text: str,
         n_results: int = 5,
-        where: Optional[Dict[str, Any]] = None,
-        where_document: Optional[Dict[str, Any]] = None,
-    ) -> List[Dict[str, Any]]:
+        where: dict[str, Any] | None = None,
+        where_document: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Query the clarity index for semantically similar nodes.
 
@@ -222,7 +222,7 @@ class ClarityIndex:
 
     def query_by_type(
         self, query_text: str, node_type: str, n_results: int = 5
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Query the clarity index, filtering by node type.
 
@@ -235,7 +235,7 @@ class ClarityIndex:
 
     def query_similar_to_node(
         self, node: Node, n_results: int = 5, exclude_self: bool = True
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Query for nodes similar to a given node.
 
@@ -259,7 +259,7 @@ class ClarityIndex:
         """Return the number of nodes in the index."""
         return self.collection.count()
 
-    def list_ids(self) -> List[str]:
+    def list_ids(self) -> list[str]:
         """Return all node IDs in the index."""
         result = self.collection.get()
         return result["ids"] if result["ids"] else []
@@ -274,8 +274,6 @@ class ClarityIndex:
 
     def persist(self) -> None:
         """Persist the index to disk. (ChromaDB does this automatically.)"""
-        pass
 
     def close(self) -> None:
         """Close the ChromaDB client."""
-        pass

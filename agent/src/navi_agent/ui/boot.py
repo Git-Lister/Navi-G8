@@ -5,14 +5,10 @@ A progressive, aesthetic sequence that transitions from darkness to
 field awareness. Sets the tone for the session.
 """
 
-import sys
 import time
-from typing import Optional
 
 from rich.align import Align
 from rich.console import Console
-from rich.layout import Layout
-from rich.live import Live
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.text import Text

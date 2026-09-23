@@ -9,8 +9,8 @@ Based on the Ghost-in-the-Share Blueprint (v2.1).
 """
 
 import uuid
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # ─── Enums ──────────────────────────────────────────────────────────────
 
 
-class TrajectoryStatus(str, Enum):
+class TrajectoryStatus(StrEnum):
     """Status of a high-level trajectory."""
 
     ACTIVE = "active"
@@ -27,7 +27,7 @@ class TrajectoryStatus(str, Enum):
     ABANDONED = "abandoned"
 
 
-class NodeType(str, Enum):
+class NodeType(StrEnum):
     """Type of node in the graph."""
 
     TRAJECTORY = "trajectory"
@@ -38,7 +38,7 @@ class NodeType(str, Enum):
     SESSION = "session"
 
 
-class EdgeType(str, Enum):
+class EdgeType(StrEnum):
     """Type of edge in the graph."""
 
     PRECEDES = "precedes"  # Temporal ordering (A happened before B)
@@ -59,8 +59,8 @@ class Node(BaseModel):
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: NodeType
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -119,7 +119,7 @@ class Session(Node):
     """A transient instance of the cognitive field."""
 
     type: NodeType = NodeType.SESSION
-    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     ended_at: datetime | None = None
     coherence_history: list[float] = Field(default_factory=list)
 
@@ -136,7 +136,7 @@ class Edge(BaseModel):
     source_id: str
     target_id: str
     type: EdgeType
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
